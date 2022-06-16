@@ -1,0 +1,17 @@
+Using the combined dataset until told otherwise
+8088 Datapoints
+Positive and Negative catch
+? Indicates need to look in metadata somehwere
+
+Colnames:
+	LON - No.
+	LAT - No.
+	CRUISE - No. Cruise identifier
+	BEGIN_EST	I'm assuming this is date? check. Format: yyyy-mm-dd
+	SEASON - Cat: SPRING, FALL
+	ST - No. Stratum?
+	STAT - No. Station
+	SETDEPTH - No. Depth. Meters
+	BOTTEMP - No. deg C
+	NUM - No. Catch Number
+	WT - No. Weight. kg

@@ -1,0 +1,47 @@
+SampleID,Species,NumberCaught,Date,StationName,Latitude,Longitude,Temp,Salinity,Substrate
+1997024,Lumpfish,1,7/11/1997,Fort Stark (Little Harbor)(BS),"43o 03 28.0""N","070o 42 51.7""W",15,30,SAND
+1997025,Lumpfish,17,7/11/1997,Odiorne Beach (BS),"43o 03 07.9""N","070o 43 22.9""W",18,30,SAND
+1997046,Lumpfish,1,9/10/1997,Broad Cove (BS),"43o 06 56.8""N","070o 50 49.1""W",18,29,MUD
+1997053,Lumpfish,1,9/22/1997,Fox Point (BS),"43o 07 03.1""N","070o 51 15.1""W",15,28,MUD/SAND
+1997075,Lumpfish,1,11/6/1997,General Sullivan Cove (BS),"43o 07 00.1""N","070o 49 23.6""W",11,12,MUD
+1998028,Lumpfish,1,7/16/1998,Fort Stark (Little Harbor)(BS),"43o 03 28.0""N","070o 42 51.7""W",15,30,SAND
+1998029,Lumpfish,2,7/16/1998,Odiorne Beach (BS),"43o 03 07.9""N","070o 43 22.9""W",17,30,SAND
+1998087,Lumpfish,1,11/11/1998,Fort Stark (Little Harbor)(BS),"43o 03 28.0""N","070o 42 51.7""W",11,29,SAND
+1999050,Lumpfish,1,9/3/1999,Yankee Coop (BS),"42o 53 33.0""N","070o 49 12.1""W",21,33,SAND
+2000018,Lumpfish,1,7/6/2000,Fox Point (BS),"43o 07 03.1""N","070o 51 15.1""W",20,29,MUD/SAND
+2000030,Lumpfish,1,7/26/2000,Fort Stark (Little Harbor)(BS),"43o 03 28.0""N","070o 42 51.7""W",19,33,SAND
+2000084,Lumpfish,1,11/7/2000,Smith & Gilmore (BS),"42o 53 58.1""N","070o 49 05.4""W",11,30,MUD/SAND
+2001022,Lumpfish,1,7/12/2001,General Sullivan Cove (BS),"43o 07 00.1""N","070o 49 23.6""W",17,28,MUD
+2001035,Lumpfish,1,8/14/2001,Yankee Coop (BS),"42o 53 33.0""N","070o 49 12.1""W",18,31,MUD/SAND
+2001044,Lumpfish,1,8/24/2001,Schiller Plant (BS),"43o 05 59.3""N","070o 47 15.5""W",18,31,MUD/SAND
+2001052,Lumpfish,1,9/11/2001,General Sullivan Cove (BS),"43o 07 00.1""N","070o 49 23.6""W",17,31,MUD
+2001058,Lumpfish,1,9/13/2001,Smith & Gilmore (BS),"42o 53 58.1""N","070o 49 05.4""W",15,31,SAND
+2001080,Lumpfish,2,10/12/2001,Odiorne Beach (BS),"43o 03 07.9""N","070o 43 22.9""W",12,32,SAND
+2001089,Lumpfish,1,11/10/2001,Smith & Gilmore (BS),"42o 53 58.1""N","070o 49 05.4""W",7,30,SAND
+2002018,Lumpfish,1,7/1/2002,Fox Point (BS),"43o 07 03.1""N","070o 51 15.1""W",22,24,MUD/SAND
+2002040,Lumpfish,1,8/13/2002,Fox Point (BS),"43o 07 03.1""N","070o 51 15.1""W",21,31,MUD/SAND
+2002051,Lumpfish,2,9/10/2002,Broad Cove (BS),"43o 06 56.8""N","070o 50 49.1""W",22,30,MUD/SAND
+2002080,Lumpfish,1,11/12/2002,Broad Cove (BS),"43o 06 56.8""N","070o 50 49.1""W",10,24,MUD/SAND
+2003006,Lumpfish,1,6/19/2003,General Sullivan Cove (BS),"43o 07 00.1""N","070o 49 23.6""W",15,21,MUD
+2003024,Lumpfish,1,7/21/2003,Fort Stark (Little Harbor)(BS),"43o 03 28.0""N","070o 42 51.7""W",17,28,SAND
+2003054,Lumpfish,3,9/18/2003,Fort Stark (Little Harbor)(BS),"43o 03 28.0""N","070o 42 51.7""W",17,31,SAND
+2003063,Lumpfish,3,10/1/2003,Fox Point (BS),"43o 07 03.1""N","070o 51 15.1""W",16,29,MUD/SAND
+2003066,Lumpfish,1,10/2/2003,General Sullivan Cove (BS),"43o 07 00.1""N","070o 49 23.6""W",16,30,MUD
+2003069,Lumpfish,1,10/3/2003,Smith & Gilmore (BS),"42o 53 58.1""N","070o 49 05.4""W",13,30,MUD/SAND
+2004018,Lumpfish,1,7/6/2004,Fox Point (BS),"43o 07 03.1""N","070o 51 15.1""W",19,28,MUD/SAND
+2004024,Lumpfish,1,7/9/2004,Fort Stark (Little Harbor)(BS),"43o 03 28.0""N","070o 42 51.7""W",15,30,SAND
+2005026,Lumpfish,37,7/26/2005,Fort Stark (Little Harbor)(BS),"43o 03 28.0""N","070o 42 51.7""W",18,31,SAND
+2006029,Lumpfish,2,7/19/2006,Odiorne Beach (BS),"43o 03 07.9""N","070o 43 22.9""W",19,28,SAND
+2006043,Lumpfish,1,8/15/2006,Fort Stark (Little Harbor)(BS),"43o 03 28.0""N","070o 42 51.7""W",17,29,SAND
+2006062,Lumpfish,1,10/2/2006,Yankee Coop (BS),"42o 53 33.0""N","070o 49 12.1""W",15,29,MUD/SAND
+2006077,Lumpfish,1,11/1/2006,Yankee Coop (BS),"42o 53 33.0""N","070o 49 12.1""W",11,30,SAND
+2008032,Lumpfish,1,8/5/2008,Broad Cove (BS),"43o 06 56.8""N","070o 50 49.1""W",21.7,21.9,MUD
+2008069,Lumpfish,1,10/7/2008,Yankee Coop (BS),"42o 53 33.0""N","070o 49 12.1""W",12.1,30,MUD/SAND
+2008081,Lumpfish,1,11/6/2008,Odiorne Beach (BS),"43o 03 07.9""N","070o 43 22.9""W",10.9,29.3,SAND
+2009075,Lumpfish,1,10/14/2009,Smith & Gilmore (BS),"42o 53 58.1""N","070o 49 05.4""W",10.9,25.9,MUD/SAND
+2009077,Lumpfish,1,11/10/2009,Broad Cove (BS),"43o 06 56.8""N","070o 50 49.1""W",9.5,25.5,MUD/SAND
+2009086,Lumpfish,1,11/13/2009,Odiorne Beach (BS),"43o 03 07.9""N","070o 43 22.9""W",9.4,30.9,MUD/SAND
+2010065,Lumpfish,1,10/5/2010,Fort Stark (Little Harbor)(BS),"43o 03 28.0""N","070o 42 51.7""W",14.7,31.2,SAND
+2013074,Lumpfish,1,10/15/2013,Smith & Gilmore (BS),"42o 53 58.1""N","070o 49 05.4""W",14.7,30.9,MUD/SHELL
+2015046,Lumpfish,1,9/4/2015,Fort Stark (Little Harbor)(BS),"43o 03 28.0""N","070o 42 51.7""W",17.2,25.8,MUD/SAND
+2015084,Lumpfish,1,11/5/2015,Yankee Coop (BS),"42o 53 33.0""N","070o 49 12.1""W",11.3,31.3,SAND

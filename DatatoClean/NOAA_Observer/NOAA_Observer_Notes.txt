@@ -1,0 +1,35 @@
+? Indicates need to look in metadata somehwere
+Some Metadata in combined data file
+Combined does this technically mean negative catch?
+
+4 Datasets: LOOK IN METADATA FOR EXACT DIFFERENCES AND HOW TO COMBINE
+	NOAA_Observer_LengthData
+	NOAA_Observer_CatchData
+
+Connecting Columns:
+	YEAR
+	MONTH
+	AREA?
+	
+Column Names:
+	NOAA_Observer_LengthData - 363 Datapoints. Positive Catch
+		YEAR - No.
+		MONTH - No.
+		AREA - No. Statistical area of haul
+		GEARNM - String.
+		COMNAME - String. Ignore
+		SAMPWEIGHT - No. Total Weight of Subsample. Units?
+		LENAML - No. Length. Cm
+		NUMLEN - No. Number at that length.
+
+	NOAA_Observer_CatchData - 9020 Datapoints. Positive Catch?
+		YEAR - No.
+		MONTH - No.
+		HAILWT - No. Total Weight of Catch. LBS.
+		CATDISP - No. Catch Disposition. 0 = discard. 1 = kept
+		NEGEAR - No. NE Gear Coad
+		GEARNM - String.
+		HAUL TARGET - String. Should I do something with this
+		DEPTH(fa) - No.
+		WTMP - No. Sea Surface Temp. Degrees F.
+		AREA - No. Statistical area of haul
