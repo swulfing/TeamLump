@@ -1,0 +1,14 @@
+Current Columnns:
+	DATASOURCE
+	LON - format: Decimal Degrees (DD)
+	LAT - format: Decimal Degrees (DD)
+	DATE - format: yyyy.mm.dd
+	SEASON - format:cats(WINTER, SPRING, SUMMER, FALL)
+	STRATUM - format TBD
+	SURVEY_ID - Unique to each dataset. Denotes cruise ID number provided by datasource
+	STATION - If data provider gave name of survey region. Note: make sure station and region imply the same thing
+	DEPTH - meters
+	TEMP_BOTTOM - Deg C
+	TEMP_SURFACE - Deg C
+	WEIGHT - Weight of sampled lumpfish. Kg (for now)
+	
