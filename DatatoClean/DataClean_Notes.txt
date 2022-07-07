@@ -11,4 +11,5 @@ Current Columnns:
 	TEMP_BOTTOM - Deg C
 	TEMP_SURFACE - Deg C
 	WEIGHT - Weight of sampled lumpfish. Kg (for now)
-	
+	WEIGHT_AVG - Weight of sampled lumpfish if you had to take average from tow (NA if WEIGHT is specified)
+	WEIGHT_TOW - Weight of whole tow if aggregated (NA if WEIGHT is specified)

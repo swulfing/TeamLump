@@ -1,4 +1,6 @@
-Using the combined dataset until told otherwise
+Using the combined dataset until told otherwise - Elizabeth confirmed this is the right one
+Turned zero weights to NA's. Check that.
+
 8088 Datapoints
 Positive and Negative catch
 ? Indicates need to look in metadata somehwere

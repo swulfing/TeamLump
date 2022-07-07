@@ -1,3 +1,5 @@
+Note: 22-016 gfile is most recent data and needs to be incorporated as well. SEE ONE DRIVE. ELIZABETH MAY HAVE ALREADY DONE THIS
+
 ? Indicates need to look in metadata somehwere
 Some Metadata in combined data file
 Combined does this technically mean negative catch?
@@ -9,7 +11,8 @@ Combined does this technically mean negative catch?
 Connecting Columns:
 	YEAR
 	MONTH
-	AREA?
+	AREA? Statistical area website explanation:
+		https://www.fisheries.noaa.gov/resource/map/greater-atlantic-region-statistical-areas
 	
 Column Names:
 	NOAA_Observer_LengthData - 363 Datapoints. Positive Catch
