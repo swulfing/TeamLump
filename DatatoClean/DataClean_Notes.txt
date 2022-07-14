@@ -3,13 +3,17 @@ Current Columnns:
 	LON - format: Decimal Degrees (DD)
 	LAT - format: Decimal Degrees (DD)
 	DATE - format: yyyy.mm.dd
+	TIME - format: 00:00
 	SEASON - format:cats(WINTER, SPRING, SUMMER, FALL)
-	STRATUM - format TBD
+	STRATUM - format TBD, are these transferable across surveys? Note: See MEDMR protocol for note about strata. May have to put in some for that
+	SUBSTRATE - format TBD. String describing substrate
 	SURVEY_ID - Unique to each dataset. Denotes cruise ID number provided by datasource
 	STATION - If data provider gave name of survey region. Note: make sure station and region imply the same thing
 	DEPTH - meters
 	TEMP_BOTTOM - Deg C
 	TEMP_SURFACE - Deg C
+	SALINITY - Salinity in ppt
+	LENGTH - Length of fish in cm
 	WEIGHT - Weight of sampled lumpfish. Kg (for now)
 	WEIGHT_AVG - Weight of sampled lumpfish if you had to take average from tow (NA if WEIGHT is specified)
 	WEIGHT_TOW - Weight of whole tow if aggregated (NA if WEIGHT is specified)

@@ -1,5 +1,7 @@
 ? Indicates need to look in metadata somehwere
 
+Note: Waiting to find metadata to dig into this one
+
 4 Datasets: LOOK IN METADATA FOR EXACT DIFFERENCES
 	Lumpfish_Bio_check
 	MaineDMR_Trawl_Survey_Catch_at_Length_Data_2022-05-21

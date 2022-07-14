@@ -1,4 +1,4 @@
-Note: 22-016 gfile is most recent data and needs to be incorporated as well. SEE ONE DRIVE. ELIZABETH MAY HAVE ALREADY DONE THIS
+Note: 22-016 gfile is most recent data. It's been incorporated into the NOAA_Observer_CatchData and NOAA_Observer_LengthData files
 
 ? Indicates need to look in metadata somehwere
 Some Metadata in combined data file
