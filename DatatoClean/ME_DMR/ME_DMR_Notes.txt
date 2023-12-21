@@ -1,0 +1,97 @@
+? Indicates need to look in metadata somehwere
+
+Note: Waiting to find metadata to dig into this one
+
+4 Datasets: LOOK IN METADATA FOR EXACT DIFFERENCES
+	Lumpfish_Bio_check
+	MaineDMR_Trawl_Survey_Catch_at_Length_Data_2022-05-21
+	MaineDMR_Trawl_Survey_Catch_Data_2022-05-21
+	MaineDMR_Trawl_Survey_Tow_Data_2022-05-21
+	
+Connecting Columns:
+	Survey: Bio_check, Trawl_Catch, Trawl_Tow
+	TowNum: Bio_check, Trawl_Length, Trawl_Catch, Trawl_Tow
+	Region: Bio_check, Trawl_Catch, Trawl_Tow
+	GridID: Bio_check, Trawl_Catch, Trawl_Tow
+	TowNum: Bio_check, Trawl_Length, Trawl_Catch, Trawl_Tow
+	
+Column Names:
+	Lumpfish_Bio_check - 40 Datapoints. Positive Catch
+		Survey - String
+		TowNum - No.
+		Region - No.
+		Stratum - No. ?
+		Grid_ID - No. Difference between Region and Grid no?
+		Common_name - String. ignore
+		Scientific_name - String. ignore
+		NumberCaught - No.
+		Weight.x - No. kg total catch weight
+		station_code - String
+		Start_Date - No. NOTE: I THINK EXCEL MESSED THIS UP
+		End_Date - No. NOTE: I THINK EXCEL MESSED THIS UP
+		start_lat - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 LATLON/TOW
+		start_lon - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 LATLON/TOW
+		end_lat - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 LATLON/TOW
+		end_lon - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 LATLON/TOW
+		Year - No.
+		Frequency - No. Number at that length. Standardized to 20 min tows
+		Length - No.
+		Unit_Len - String NOTE: SEE IF ANYTHING BESIDES CM
+		Weight.y - No. individual weight in gram
+		SampleType - String. TF is this?
+		Sex - String.
+		Maturity - String. ?
+			
+	MaineDMR_Trawl_Survey_Catch_at_Length_Data_2022.05.21 - 1207 Datapoints. Positive Catch
+		Season - String
+		Year - No.
+		Tow_Number - No.
+		Stratum - No. 
+		Common_Name - String. Ignore
+		Length - No.
+		Unit_of_Length - String NOTE: Only cm
+		Frequency - No. Number at that length. Standardized to 20 min tow
+		Sex - Str.
+		
+	MaineDMR_Trawl_Survey_Catch_Data_2022.05.21 656 Datapoints. Positive Catch
+		Survey - String
+		Season - String
+		Year - No.
+		Tow_Number - No.
+		Region - No.
+		Stratum - No.
+		Grid - No.
+		Date - Format: yyy-mm-dd
+		Common_Name - String. Ignore
+		Number_Caught - No.
+		Weight_kg - No.
+		Subsample_Weight_kg - No
+		Subsample_Weight_kg_2 - No. TF IS THIS? EMPTY. Delete
+		Male_Wt_kg - No.
+		Female_Wt_kg - No.
+		Expanded_Catch - No. Standardized to 20 min tow
+		Expanded_Weight_kg - No. Standardized to 20 min tow
+		
+	MaineDMR_Trawl_Survey_Tow_Data_2022.05.21 3580 Datapoints. Positive Catch
+		Survey - String
+		Season - String
+		Year - No.
+		Tow_Number - No.
+		Region No.
+		Depth_Straum - No. ?
+		Grid - No.
+		Start_Latitude - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 LATLON/TOW
+		Start_Longitude - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 LATLON/TOW
+		End_Latitude - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 LATLON/TOW
+		End_Longitude - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 LATLON/TOW
+		Start_Date - Format: yyyy-mm-dd
+		Tow_Time - Format hh:mm
+		Start_Depth_fathoms - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 Depth
+		End_Depth_fathoms - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 Depth
+		Tow_Type - String. ?
+		Tow_Length - No. Minute length of tow
+		Air_Temp - No. Units?
+		Bottom_WaterTemp_DegC - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 Temp
+		Bottom_Salinity - No.  - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 Sal
+		Surface_WaterTemp_DegC - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 Temp
+		Surface_Salinity - No.  - No. NOTE: HOW TO COMBINE THIS WITH OTHER SETS THAT JUST HAVE 1 Sal		

@@ -1,0 +1,273 @@
+---
+title: "Lumpfish Visuals"
+author: "Sophie Wulfing"
+date:  "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document: default
+  pdf_document: default
+---
+This is a visualization of Lumpfish data after the latest NOAA Observer data was incorporated
+
+NOAA Observer Notes:
+ * NOAA Observer data was not uploaded to GitHub due to confidentiality. Must be on local computer to run analyses
+ * Only the samples that were lengthed have number of fish per tow specified. Otherwise, we just know that at least one fish was caught on this tow, making the WEIGHT_TOW column useless in non-lengthed observations
+ * TOW IDs in NOAA Observer data were eliminated due to confidentiality
+ * Some weights were confusing (See boxplot below)
+
+
+```{r setup, include=FALSE, cache=TRUE, echo = FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(sf)
+library(mapview)
+library(lubridate)
+library(gganimate)
+library(gifski)
+library(maps)
+library(knitr)
+library(ggpubr)
+library(magick)
+library(ggplot2)
+library(dplyr)
+
+setwd("C:/Users/sophi/Documents/GitHub/TeamLump")
+Lumpfish_Data_clean <- read.csv("DatatoClean/Lumpfish_Data_clean.csv")
+
+Lumpfish_Data_clean$YEAR <- year(Lumpfish_Data_clean$DATE)
+
+Lumpfish_Data_map <- Lumpfish_Data_clean %>%
+  drop_na(c("LAT", "LON", "DATE", "YEAR")) %>%
+  mutate(across(SEASON, factor, levels = c("WINTER", "SPRING", "SUMMER", "FALL")))
+
+which_state <- c("maine", "new hampshire", "vermont", "massachusetts", "rhode island", "connecticut",
+                 "new york", "new jersey", "pennsylvania", "virginia", "maryland", "washington dc", "delaware")
+county_info <- map_data("state", region=which_state)
+
+base_map <- ggplot(data = county_info, mapping = aes(x = long, y = lat, group = group)) +
+  geom_polygon(color = "black", fill = "white") +
+  coord_quickmap() +
+  theme_void() 
+
+min_long <- min(Lumpfish_Data_map$LON)
+max_long <- max(Lumpfish_Data_map$LON)
+min_lat <- 41.5 #min(Lumpfish_Data_map$LAT)
+max_lat <- max(Lumpfish_Data_map$LAT)
+
+zoom_map <- base_map +
+   coord_quickmap(xlim = c(min_long, max_long),  ylim = c(min_lat, max_lat))
+
+
+# testing <- Lumpfish_Data_clean %>%
+#   filter(DATA_SOURCE == "NEFSC") %>%
+#   #drop_na(c("LAT", "LON", "DATE", "YEAR")) %>%
+#   filter(is.na(YEAR))
+# 
+# 
+# View(testing)
+# 
+# 
+# min(testing$YEAR)
+```
+
+```{r pointsperyear, echo = FALSE, fig.cap='Datapoints per year. Totals 12,920 observations spanning from 1963 to 2023', warning=FALSE}
+
+#sorted_years <- lapply(list(unique(Lumpfish_Data_clean$YEAR)), sort)
+library(ggplot2)
+
+yearMap_zoom <- zoom_map +
+  geom_point(data = Lumpfish_Data_map, aes(x = LON, y = LAT, group=YEAR, colour = YEAR))
+yearMap_zoom
+
+```
+
+\newpage
+
+```{r pointstable, echo = FALSE, results = 'asis', warning=FALSE}
+
+library(dplyr)
+
+year_table <- data.frame(matrix(ncol = 3, nrow = 0))
+colnames(year_table) <- c("Data Code", "Years Spanned", "Number of datapoints")
+
+sources <- unique(Lumpfish_Data_clean$DATA_SOURCE)
+
+for(i in 1:length(sources)){
+  new_data <- Lumpfish_Data_clean %>%
+    filter(DATA_SOURCE == sources[i])
+  
+  year_table[i,] <- c(sources[i], paste0(min(new_data$YEAR), "-", max(new_data$YEAR)), nrow(new_data))
+}
+
+knitr::kable(year_table, caption = "Data points and year spanned per source")
+
+```
+
+\newpage
+
+```{r FishPerSEASON, echo=FALSE, fig.cap='Datapoints per season', warning=FALSE}
+library(dplyr)
+
+#FIX LEGEND
+season_labs <- c("Winter", "Spring", "Summer", "Fall")
+names(season_labs) <- c("WINTER", "SPRING", "SUMMER", "FALL")
+
+zoom_map +
+  geom_point(data = Lumpfish_Data_map, aes(x = LON, y = LAT, group=DATA_SOURCE, colour = DATA_SOURCE), size = .75) +
+  facet_wrap(~ SEASON, ncol = 2, labeller = labeller(SEASON = season_labs))
+
+
+
+```
+
+```{r FishPerSeasonAnimation, echo = FALSE, fig.cap='Datapoints per season', warning=FALSE}
+
+library(gganimate)
+map_with_seasondata <- zoom_map +
+  geom_point(data = Lumpfish_Data_map, aes(x = LON, y = LAT, group=SEASON, colour = DATA_SOURCE), size = 0.75)
+
+map_with_seasonanimation <- map_with_seasondata +
+  transition_states(SEASON) +
+  ggtitle('Season: {next_state}')
+#num_years <- max(Lumpfish_Data_map$YEAR) - min(Lumpfish_Data_map$YEAR) + 1
+animate(map_with_seasonanimation, fps = 1, nframes = 5)
+
+```
+
+\newpage
+
+```{r LenperYear, echo = FALSE, fig.cap = "Average Length of lump fish over time", warning=FALSE}
+library(tidyr)
+library(lubridate)
+
+yearly_length <- Lumpfish_Data_clean %>%
+  mutate(YEAR = year(DATE)) %>%
+  drop_na(LENGTH) %>%
+  group_by(YEAR) %>%
+  summarize(LENGTH_MEAN = mean(LENGTH))
+
+plot(yearly_length, ylab="Mean Length (cm)", xlab="Year")
+```
+
+\newpage
+
+```{r WtperYear, echo = FALSE, fig.cap = "Average weight of fish over time across all data sources", warning=FALSE}
+yearly_wt <- Lumpfish_Data_clean %>%
+  mutate(YEAR = year(DATE)) %>%
+  drop_na(WEIGHT_AVG) %>%
+  group_by(YEAR) %>%
+  summarize(WT_MEAN = mean(WEIGHT_AVG))
+
+plot(yearly_wt, ylab="Mean weight (kg)", xlab="Year")
+```
+
+```{r WtperYearAll, echo = FALSE, fig.show="hold", out.width="50%", results = "asis", fig.cap = "Average weight of fish over time with outlier datasets (MA_DMF and NEFSC) and the newer dataset (NOAA_Observer) to show how they're skewing data", warning=FALSE}
+yearly_wt <- Lumpfish_Data_clean %>%
+  mutate(YEAR = year(DATE)) %>%
+  drop_na(WEIGHT_AVG) %>%
+  group_by(YEAR) %>%
+  summarize(WT_MEAN = mean(WEIGHT_AVG))
+
+plot(yearly_wt, main = "Average weight of catch across all data sources", ylab="Mean weight (kg)", xlab="Year")
+
+
+MA_DMF <- Lumpfish_Data_clean %>%
+  filter(DATA_SOURCE == "MA_DMF") %>%
+  mutate(YEAR = year(DATE)) %>%
+  drop_na(WEIGHT_AVG) %>%
+  group_by(YEAR) %>%
+  summarize(WT_MEAN = mean(WEIGHT_AVG))
+
+plot(MA_DMF, main = "MA_DMF average weight of catch over time", ylab="Mean weight (kg)", xlab="Year")
+
+NEFSC <- Lumpfish_Data_clean %>%
+  filter(DATA_SOURCE == "NEFSC") %>%
+  mutate(YEAR = year(DATE)) %>%
+  drop_na(WEIGHT_AVG) %>%
+  group_by(YEAR) %>%
+  summarize(WT_MEAN = mean(WEIGHT_AVG))
+
+plot(NEFSC, main = "NEFSC average weight of catch over time", ylab="Mean weight (kg)", xlab="Year")
+
+NOAA_Observer <- Lumpfish_Data_clean %>%
+  filter(DATA_SOURCE == "NOAA_Observer") %>%
+  mutate(YEAR = year(DATE)) %>%
+  drop_na(WEIGHT_AVG) %>%
+  group_by(YEAR) %>%
+  summarize(WT_MEAN = mean(WEIGHT_AVG))
+
+plot(NOAA_Observer, main = "NOAA_Observer average weight of catch over time", ylab="Mean weight (kg)", xlab="Year")
+```
+
+
+```{r avgweightBoxplot, echo = FALSE, fig.cap = "Range of reported average weights (kg) per datasource. Average weights were taken when weight of whole tow was reported as well as number of fish in the tow", warning=FALSE}
+
+ggplot(Lumpfish_Data_map, aes(x = DATA_SOURCE, y = WEIGHT_AVG)) +
+  geom_boxplot()
+
+
+```
+
+```{r weightBoxplot, echo = FALSE, fig.cap = "Range of reported individual weights (kg) per datasource. Individual weights were used when data collectors individually weight each fish", warning=FALSE}
+
+ggplot(Lumpfish_Data_map, aes(x = DATA_SOURCE, y = WEIGHT)) +
+  geom_boxplot()
+
+
+```
+
+\newpage
+
+```{r animationCentroid, echo = FALSE, fig.cap = "Centroid of lumpfish found per year (left) with raw data per year (right)", warning=FALSE}
+
+library(magick)
+
+Lumpfish_With_Centroid <- Lumpfish_Data_map %>%
+  group_by(YEAR) %>%
+  mutate(LAT.AVG = mean(LAT)) %>%
+  mutate(LON.AVG = mean(LON))
+
+
+map_with_rawdata <- zoom_map +
+  geom_point(data = Lumpfish_With_Centroid, aes(x = LON, y = LAT, group=YEAR))
+
+map_with_centroiddata <- zoom_map +
+  geom_point(data = Lumpfish_With_Centroid, aes(x = LON.AVG, y = LAT.AVG, group=YEAR))
+
+# require(gridExtra)
+# map_panel <- grid.arrange(map_with_centroiddata, map_with_rawdata, ncol=2)
+
+map_with_raw_animation <- map_with_rawdata +
+  transition_time(YEAR) +
+  ggtitle('Year: {frame_time}',
+          subtitle = 'Frame {frame} of {nframes}')
+num_years <- max(Lumpfish_Data_map$YEAR) - min(Lumpfish_Data_map$YEAR) + 1
+b_gif <- animate(map_with_raw_animation, nframes = num_years, fps = 2)
+
+map_with_centroid_animation <- map_with_centroiddata +
+  transition_time(YEAR) +
+  ggtitle('Year: {frame_time}',
+          subtitle = 'Frame {frame} of {nframes}')
+num_years <- max(Lumpfish_Data_map$YEAR) - min(Lumpfish_Data_map$YEAR) + 1
+a_gif <- animate(map_with_centroid_animation, nframes = num_years, fps = 2)
+
+a_mgif <- image_read(a_gif)
+b_mgif <- image_read(b_gif)
+
+new_gif <- image_append(c(a_mgif[1], b_mgif[1]))
+for(i in 2:60){
+  combined <- image_append(c(a_mgif[i], b_mgif[i]))
+  new_gif <- c(new_gif, combined)
+}
+
+new_gif
+```
+
+
+
+
+
+
+
+
+
+

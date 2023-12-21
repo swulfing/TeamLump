@@ -1,0 +1,474 @@
+---
+title: "DataClean_Script"
+author: "Sophie Wulfing"
+date: '2022-09-10'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+#knitr::opts_knit$set(root.dir = "C:/Users/sophi/Documents/GitHub/TeamLump")
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+
+
+library(tidyverse)
+library(dplyr)
+library(magrittr)
+library(sp)
+library(lubridate)
+
+#setwd("C:/Users/sophi/Documents/GitHub/TeamLump")
+datasets <- c("MA_DMF_clean", "ME_DMR_clean", "NH_FG_clean", "NOAA_Observer_clean", "NEFSC_clean", "datasets")
+
+```
+
+```{r MA_DMF}
+
+MA_DMF <- data.frame(read.csv("MA_DMF/MA_DMF_combined.csv"))
+
+#Getting rid of negative catch.change 0 weights to NA's- Reduces from 8087 to 65 datapoints
+MA_DMF_clean <- MA_DMF %>%
+  filter(NUM !=0 ) %>%
+  mutate(WT = na_if(WT, 0))
+
+#Read BEGIN_EST as Date in R
+MA_DMF_clean$BEGIN_EST <- as.POSIXct(MA_DMF_clean$BEGIN_EST, format = "%d-%b-%y")
+
+
+#Renaming Columns and make DATASOURCE COL
+MA_DMF_clean <- MA_DMF_clean %>%
+  rename(SURVEY_ID = CRUISE,
+         DATE = BEGIN_EST,
+         STRATUM = ST,
+         STATION = STAT,
+         DEPTH = SETDEPTH,
+         TEMP_BOTTOM = BOTTEMP,
+         NO_TOW = NUM,
+         WEIGHT_TOW = WT) %>%
+  mutate(DATA_SOURCE = "MA_DMF", .before = LON)
+
+#Duplicate columns based on no of lumpfish caught per tow
+MA_DMF_clean <- as.data.frame(lapply(MA_DMF_clean, rep, MA_DMF_clean$NO_TOW))
+
+MA_DMF_clean <- MA_DMF_clean %>%
+  mutate(WEIGHT_AVG = WEIGHT_TOW/NO_TOW)
+
+#remove all object names except final product
+rm(list=setdiff(ls(), datasets))
+
+
+```
+
+```{r ME_DMR}
+
+Bio_check <- data.frame(read.csv("ME_DMR/Lumpfish_Bio_check.csv"))
+Trawl_Length <- data.frame(read.csv("ME_DMR/MaineDMR_Trawl_Survey_Catch_at_Length_Data_2022.05.21.csv"))
+Trawl_Catch <- data.frame(read.csv("ME_DMR/MaineDMR_Trawl_Survey_Catch_Data_2022.05.21.csv"))
+Trawl_Tow <- data.frame(read.csv("ME_DMR/MaineDMR_Trawl_Survey_Tow_Data_2022.05.21.csv"))
+
+#Clean tow dataset - fix dates, average lat/lon data and depths. Make depth in meters
+Trawl_Tow$Date <- as.Date(Trawl_Tow$Start_Date)
+Trawl_Tow$Start_Date <- as.POSIXct(Trawl_Tow$Start_Date, format = "%Y-%m-%dT%H:%M:00Z")
+Trawl_Tow$Time <- format(as.POSIXct(Trawl_Tow$Start_Date), format =  "%H:%M")
+
+Trawl_Tow_clean <- Trawl_Tow %>%
+  rowwise() %>% 
+  mutate(Avg_Depth_meters = mean(c(Start_Depth_fathoms, End_Depth_fathoms), na.rm = TRUE) * 1.8288) %>%
+  mutate(Average_Lat = mean(c(Start_Latitude, End_Latitude))) %>%
+  mutate(Average_Lon = mean(c(Start_Longitude, End_Longitude)))
+
+#Repeat rows in Catch Data based on number caught and create column specifying average weight of tow vs indiv weight (will eventually override individual weights for those that have bio check info)
+Trawl_Catch_clean <- as.data.frame(lapply(Trawl_Catch, rep, Trawl_Catch$Number_Caught))
+
+Trawl_Catch_clean <- Trawl_Catch_clean %>%
+  mutate(WEIGHT_AVG = Weight_kg/Number_Caught) %>%
+  select("Season", "Year", "Tow_Number", "WEIGHT_AVG") %>%
+  group_by(Season, Year, Tow_Number) %>%
+  mutate(positionInCategory = 1:n()) #Numbers each fish within a tow to match up with lengths later
+
+# #Clean length dataset - Need to de-standardize frequency back into total number caught
+# #Add tow time (from tow dataset) and no caught (from catch dataset) to length dataset to figure out how many actual fish at each length
+Tow_Times <- Trawl_Tow %>%
+  select(Season, Year, Tow_Number, Tow_Time)
+
+No_Caught <- Trawl_Catch %>%
+  select(Season, Year, Tow_Number, Number_Caught)
+
+# Transformed frequency back into total number caught
+Trawl_Length_combine <- left_join(Trawl_Length, No_Caught,
+                       by = c("Season", "Year", "Tow_Number")) %>%
+  left_join(., Tow_Times,
+            by = c("Season", "Year", "Tow_Number"))
+
+Trawl_Length_combine <- Trawl_Length_combine %>%
+  rowwise() %>%
+  mutate(Tow_Secs = as.numeric(substring(Tow_Time, regexpr(":", Tow_Time)+1))) %>%
+  mutate(No_at_Length = (Frequency * Tow_Secs) / 20)
+
+#Creating one row per lumpfish caugth
+Trawl_Length_clean <- as.data.frame(lapply(Trawl_Length_combine, rep, Trawl_Length_combine$No_at_Length)) %>%
+  select(Season, Year, Tow_Number, Length, No_at_Length) %>%
+  group_by(Season, Year, Tow_Number) %>%
+  mutate(positionInCategory = 1:n()) #Numbers each fish within a tow to match up with lengths later
+  
+#Combining Catch and Length Data
+
+ME_DMR_catch <- left_join(Trawl_Catch_clean, Trawl_Length_clean,
+                          by = c("Season", "Year", "Tow_Number", "positionInCategory")) %>%
+  select(Season, Year, Tow_Number, WEIGHT_AVG, Length)
+
+#Combine with trawl data, Rename columns, Add Dataset ID
+ME_DMR_clean <- right_join(Trawl_Tow_clean, ME_DMR_catch,
+                          by = c("Season", "Year", "Tow_Number")) %>%
+  select(Survey, 
+         Season, 
+         Date,
+         #Time,
+         Air_Temp, 
+         Bottom_WaterTemp_DegC, 
+         Bottom_Salinity, 
+         Surface_WaterTemp_DegC, 
+         Surface_Salinity, 
+         Avg_Depth_meters,
+         Average_Lat,
+         Average_Lon,
+         WEIGHT_AVG,
+         Length) %>%
+  rename(LON = Average_Lon,
+         LAT = Average_Lat,
+         DATE = Date,
+         #TIME = Time,
+         SEASON = Season,
+         SURVEY_ID = Survey,
+         DEPTH = Avg_Depth_meters,
+         TEMP_AIR = Air_Temp,
+         TEMP_BOTTOM = Bottom_WaterTemp_DegC,
+         TEMP_SURFACE = Surface_WaterTemp_DegC,
+         SALINITY_BOTTOM = Bottom_Salinity, #CHECK UNITS. PPT?
+         SALINITY_SURFACE = Surface_Salinity, #CHECK UNITS. PPT?
+         LENGTH = Length) %>%
+    mutate(SEASON = replace(SEASON, SEASON == "Spring", "SPRING")) %>%
+    mutate(SEASON = replace(SEASON, SEASON == "Fall", "FALL")) %>%
+  mutate(DATA_SOURCE = "ME_DMR") %>%
+  mutate(NOTES = "Depth, LAT, and LON taken as average of start and end of tow measurements")
+
+rm(list=setdiff(ls(), datasets))
+
+# # CHECKING TO MAKE SURE ALL DATAPOINTS IN CATCH ARE ALSO IN THE LENGTH DATASET. YES THEY ARE
+# #Add up frequencies and compare to no caught and tow times
+# Freq_test <- Trawl_Length_combine %>%
+#   group_by(Season, Year, Tow_Number) %>%
+#   mutate(tot = sum(Frequency)) %>% #Adding up all the frequencies per tow
+#   distinct(Season, Year, Tow_Number, tot, Number_Caught, Tow_Time) %>% # deleting redundant columns
+#   rowwise() %>%
+#   mutate(Tow_Secs = as.numeric(substring(Tow_Time, regexpr(":", Tow_Time)+1))) #%>% #Need tow time in seconds, not string
+# 
+# Freq_test2 <- Freq_test %>%
+#   mutate(back_calc = (Number_Caught / Tow_Secs) * 20) %>% #Back calculating number caught from length data (un-standardizing based on time)
+#   mutate(diff = round(tot - back_calc, 3))
+
+
+
+
+```
+
+```{r NHFG}
+
+NHFG_Catch <- data.frame(read.csv("NH_FG/NHFG_Catch.csv"))
+NHFG_Length <- data.frame(read.csv("NH_FG/NHFG_Lengths.csv"))
+
+# # Testing. All sample ID's unique
+# NHFG_test <- NHFG_Catch %>%
+#     group_by(SampleID) %>%
+#     mutate(dupe = n() > 1) %>%
+#     filter(dupe == TRUE)
+
+
+# Not all fish caught have length data
+NHFG_test1 <- NHFG_Length %>%
+  count(SampleID)
+
+NHFG_test2 <- NHFG_Catch %>%
+  select(SampleID, NumberCaught)
+
+# Dataframe of differeces in samples
+NHFG_test <- left_join(NHFG_test1, NHFG_Catch,
+                       by = "SampleID") %>%
+  mutate(Diff = NumberCaught - n) %>%
+  rename(SubstrateName = Substrate)
+  
+  
+# Multiply rows to account for fish not lengthed then add back to dataframe
+NHFG_Unlengthed <- data.frame(lapply(NHFG_test, rep, NHFG_test$Diff))
+NHFG_Unlengthed <- select(NHFG_Unlengthed, -one_of("n", "NumberCaught", "Diff", "Species"))
+
+NH_FG_clean <- bind_rows(NHFG_Length, NHFG_Unlengthed)
+
+#Read Date as Date in R
+test <- NH_FG_clean$Date
+NH_FG_clean$Date <- as.POSIXlt(NH_FG_clean$Date, format = "%e/%d/%Y")
+
+#Convert Lat/Lon from DMS to DD
+NH_FG_clean$Latitude <- NH_FG_clean$Latitude %>%
+  sub('o ', 'd', .) %>%
+  sub(' ', '\'', .) %>%
+  sub(' ', '" ', .) %>%
+  char2dms %>%
+  as.numeric
+
+NH_FG_clean$Longitude <- NH_FG_clean$Longitude %>%
+  sub('o ', 'd', .) %>%
+  sub(' ', '\'', .) %>%
+  sub(' ', '" ', .) %>%
+  char2dms %>%
+  as.numeric
+
+#Renaming Columns and make DATASOURCE COL
+NH_FG_clean <- NH_FG_clean %>%
+  rename(LON = Longitude,
+         LAT = Latitude,
+         DATE = Date,
+         SUBSTRATE = SubstrateName,
+         SURVEY_ID = SampleID,
+         STATION = StationName,
+         SALINITY_SURFACE = Salinity,
+         TEMP_SURFACE = Temp,
+         LENGTH = Length) %>%
+  mutate(DATA_SOURCE = "NH_FG", .before = LON) %>%
+  select(-CommonName)
+
+#Are these salinities surface or depth? I've been assuming depth
+
+#remove all object names except final product
+rm(list=setdiff(ls(), datasets))
+
+
+
+```
+
+```{r NOAA_Observer}
+
+catch_data <- data.frame(read.csv("C:/Users/sophi/Desktop/NOAA_Observer_Data/NOAA_Observer_CatchData.csv"))
+length_data <- data.frame(read.csv("C:/Users/sophi/Desktop/NOAA_Observer_Data/NOAA_Observer_LengthData.csv"))
+
+#removing extra rows and columns with empty data from length dataset
+#replicating rows based on number caught
+length_clean <- length_data %>%
+  select(LINK3, YEAR, MONTH, SAMPWEIGHT, LENANML, NUMLEN) %>%
+  mutate(AVGWT = SAMPWEIGHT / NUMLEN) %>%
+  mutate(WT_IND = case_when(NUMLEN == 1 ~ SAMPWEIGHT))
+
+length_clean <- as.data.frame(lapply(length_clean, rep, length_clean$NUMLEN))
+
+#removing extra rows and columns with empty data
+catch_clean <- catch_data %>%
+  select(LINK3, YEAR, MONTH, DATEHBEG, DATEHEND, GIS_LATHBEG, GIS_LONHBEG, GIS_LATHEND, GIS_LONHEND, DEPTH, WTMP, HAILWT, GEARNM)
+
+catch_combine <- left_join(catch_clean, length_clean, by = c("LINK3", "YEAR", "MONTH"))
+
+#Conversions
+NOAA_Observer_Combine <- catch_combine %>%
+  rowwise() %>%
+  mutate(LAT = mean(c(GIS_LATHBEG, GIS_LATHEND), na.rm = TRUE)) %>% #Take average
+  mutate(LON = mean(c(GIS_LONHBEG, GIS_LONHEND), na.rm = TRUE)) %>% #Take average
+  mutate(DEPTH = DEPTH * 1.8288) %>% #Convert from fathoms to meters
+  mutate(TEMP_SURFACE = (5/9) * (WTMP-32)) %>%
+  mutate(WEIGHT_TOW = HAILWT * 0.453592) %>% #Convert weights from lbs to kgs
+  mutate(WEIGHT_AVG = AVGWT * 0.453592) %>%
+  mutate(WEIGHT = WT_IND * 0.453592) %>%
+  drop_na(c("LAT", "LON", "DATEHBEG"))
+
+NOAA_Observer_Combine$DATEHBEG <- as.POSIXct(NOAA_Observer_Combine$DATEHBEG, format = "%m-%d-%Y %T")
+
+NOAA_Observer_clean <- NOAA_Observer_Combine %>%
+  select(DATEHBEG, LAT, LON, DEPTH, TEMP_SURFACE, WEIGHT_TOW, LENANML, WEIGHT_AVG, WEIGHT, NUMLEN, GEARNM) %>%
+  rename(DATE = DATEHBEG,
+         LENGTH = LENANML,
+         NO_TOW = NUMLEN) %>% 
+  mutate(DATA_SOURCE = "NOAA_Observer", .before = DATE) %>%
+  mutate(NOTES = "LAT and LON taken as average of start and end of tow measurements")
+  
+rm(list=setdiff(ls(), datasets))
+
+
+# #test to see if NAs have matching tow codes
+# test <- NOAA_Observer_clean %>%
+#   filter_at(vars(LAT, LON, DATE), any_vars(is.na(.)))
+# 
+# Comparison <- NOAA_Observer_clean %>%
+#   filter(LINK3 %in% c(test$LINK3)) %>%
+#   count(unique(LINK3))
+# #They do not. Tows with missing info do not match a tow with existing info
+
+
+```
+
+```{r NEFSC}
+NEFSC_sets <- c("22560", "22561", "22562", "22563")
+seasons <- c("FALL", "SPRING", "SUMMER", "WINTER")
+fileLocation <- "C:/Users/sophi/Desktop/NEFSC_Data/"
+
+NEFSC_seasonlist <- list()
+
+# NEFSC Data separated by season collected. This for loop just goes through data from each season and applies same cleaning protocol
+for(i in 1:length(NEFSC_sets)){
+# Note. Not using cruise dataset
+environ_data <- data.frame(read.csv(paste0(fileLocation,"NEFSC/", NEFSC_sets[i], "_FSCSTables/", NEFSC_sets[i], "_UNION_FSCS_SVSTA.csv")))
+catch_data <- data.frame(read.csv(paste0(fileLocation,"NEFSC/", NEFSC_sets[i], "_FSCSTables/", NEFSC_sets[i], "_UNION_FSCS_SVCAT.csv")))
+bio_data <- data.frame(read.csv(paste0(fileLocation,"NEFSC/", NEFSC_sets[i], "_FSCSTables/", NEFSC_sets[i], "_UNION_FSCS_SVBIO.csv")))
+len_data <- data.frame(read.csv(paste0(fileLocation,"NEFSC/", NEFSC_sets[i], "_FSCSTables/", NEFSC_sets[i], "_UNION_FSCS_SVLEN.csv")))
+
+
+#Create Catch ID's for each dataset and then filter out for lumpfish (SVSPP = 168)
+
+#Fix DATE and TIME FOR environ_data
+environ_data$EST_TIME <- format(as.POSIXct(environ_data$EST_TIME, format = "%H:%M:%S"),
+                                format = "%H:%M:%S")
+environ_data$BEGIN_EST_TOWDATE <- format(as.POSIXct(environ_data$BEGIN_EST_TOWDATE, format = "%m/%d/%Y %H:%M:%S"),
+                                         format = "%Y-%m-%d")
+
+#Rename and standardize
+environ_data_clean <- environ_data %>%
+  mutate(SURVEY_ID = paste0(CRUISE6, STATION, STRATUM)) %>%
+  mutate(SEASON = seasons[i]) %>%
+  rename(LAT = DECDEG_BEGLAT,
+         LON = DECDEG_BEGLON,
+         DATE = BEGIN_EST_TOWDATE,
+         TIME = EST_TIME,
+         DEPTH = AVGDEPTH,
+         TEMP_BOTTOM = BOTTEMP,
+         TEMP_SURFACE = SURFTEMP,
+         TEMP_AIR = AIRTEMP,
+         SALINITY_BOTTOM = BOTSALIN,
+         SALINITY_SURFACE = SURFSALIN) %>%
+  select(SURVEY_ID,
+         SEASON,
+         LON,
+         LAT,
+         DATE,
+         #TIME,
+         DEPTH, #UNITS!
+         #SVGEAR, # Ignore. Was using for gear type convo 
+         TEMP_BOTTOM,
+         TEMP_SURFACE,
+         TEMP_AIR,
+         SALINITY_BOTTOM,
+         SALINITY_SURFACE,
+         )
+
+# Catch Data
+#Create ID's, get weights from cat dataset, filter out lumpfish
+catch_data_clean <- catch_data %>%
+  mutate(SURVEY_ID = paste0(CRUISE6, STATION, STRATUM)) %>%
+  mutate(SEASON = seasons[i]) %>%
+  #rowwise() %>% 
+  mutate_at(c('EXPCATCHWT'), ~na_if(., 0)) %>% #Makes zero weights NA
+  mutate(WEIGHT_AVG = EXPCATCHWT/EXPCATCHNUM) %>%
+  filter(SVSPP == 168) %>%
+  rename(NO_TOW = EXPCATCHNUM,
+         WEIGHT_TOW = EXPCATCHWT) %>%
+  select(SURVEY_ID,
+         SEASON,
+         WEIGHT_AVG,
+         NO_TOW,
+         WEIGHT_TOW)
+
+
+# Length Data. Filter out lumpfish
+length_data_clean <- len_data %>%
+  mutate(SURVEY_ID = paste0(CRUISE6, STATION, STRATUM)) %>%
+  filter(SVSPP == 168)
+
+#Multiply rows based on number caught at length
+#Select based on cols wanted
+length_data_clean <- as.data.frame(lapply(length_data_clean, rep, length_data_clean$EXPNUMLEN)) %>%
+  select(SURVEY_ID,
+         LENGTH)
+
+#Bio Data
+bio_data_clean <- bio_data %>%
+  mutate(SURVEY_ID = paste0(CRUISE6, STATION, STRATUM)) %>%
+  filter(SVSPP == 168) %>%
+  rename(WEIGHT = INDWT) %>%
+  select(SURVEY_ID,
+         LENGTH,
+         WEIGHT)
+
+indiv_data <- left_join(length_data_clean, bio_data_clean,
+                        by = c("SURVEY_ID", "LENGTH"))
+
+
+
+NEFSC_season <- right_join(environ_data_clean, catch_data_clean,
+                       by = c("SURVEY_ID", "SEASON")) %>%
+  full_join(., indiv_data,
+            by = "SURVEY_ID") %>%
+  mutate(DATA_SOURCE = "NEFSC")
+
+NEFSC_seasonlist[[i]] <- NEFSC_season
+} ## End for loop, still need to stack all datasets
+
+#write.csv(NEFSC_clean, "C:/Users/sophi/Desktop/NEFSC_Data/NEFSC_GearTest.csv")
+
+NEFSC_clean <- Reduce(full_join, NEFSC_seasonlist)
+rm(list=setdiff(ls(), datasets))
+```
+
+```{r combine}
+
+Lumpfish_Data_clean <- plyr::rbind.fill(MA_DMF_clean, ME_DMR_clean, NH_FG_clean, NOAA_Observer_clean, NEFSC_clean)
+
+#Fix Date Formats
+Lumpfish_Data_clean$DATE <- format(as.POSIXct(Lumpfish_Data_clean$DATE, format = "%m/%d/%Y %H:%M:%S"),
+                                         format = "%Y-%m-%d")
+
+#Standardize what we're definining as SEASON - different defs across datasets
+Lumpfish_Data_clean <- Lumpfish_Data_clean %>%
+  mutate(SEASON = ifelse(month(DATE) %in% 9:11, "FALL",
+                         ifelse(month(DATE) %in% c(12, 1, 2), "WINTER",
+                                ifelse(month(DATE) %in% 3:5, "SPRING",
+                                       "SUMMER")))) %>%
+    mutate(AGE = ifelse(LENGTH >= 17, "ADULT",
+                         ifelse(LENGTH < 7, "YOY",
+                                       "JUVENILE"))) %>%
+  select(-c("STATION", "STRATUM", "SUBSTRATE")) %>%
+  filter((LENGTH <= 61) %>% replace_na(TRUE)) %>%
+  filter((WEIGHT <= 9.5) %>% replace_na(TRUE)) %>%
+  mutate(WEIGHT_BAYESIAN = (0.02630 * (LENGTH ^ 2.99)) * 0.001)
+
+#Make csv file that reports the gear types used in NOAA Observer Data
+NOAAObserver_gearCount <- Lumpfish_Data_clean %>%
+  filter(DATA_SOURCE == "NOAA_Observer") %>%
+  group_by(GEARNM) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+  
+
+write.csv(NOAAObserver_gearCount, "NOAAObserver_gearCount.csv", row.names = FALSE)
+
+# Take out gear from NOAA Observer data and write final csv
+Lumpfish_Data_clean <- Lumpfish_Data_clean %>% select(-c("GEARNM"))
+
+write.csv(Lumpfish_Data_clean,"Lumpfish_Data_clean.csv", row.names = FALSE)
+
+#Occurances Dataset
+Lumpfish_data_occurences <- Lumpfish_Data_clean %>%
+  distinct(DATA_SOURCE, LON, LAT, SURVEY_ID, DATE, .keep_all = TRUE)
+
+write.csv(Lumpfish_data_occurences,"Lumpfish_Data_occurrences.csv", row.names = FALSE)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+

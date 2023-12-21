@@ -1,0 +1,19 @@
+Using the combined dataset until told otherwise - Elizabeth confirmed this is the right one
+Turned zero weights to NA's. Check that.
+
+8088 Datapoints
+Positive and Negative catch
+? Indicates need to look in metadata somehwere
+
+Colnames:
+	LON - No. range: (-71.11383, -69.85767)
+	LAT - No. range: (41.99, 42.86715)
+	CRUISE - No. Cruise identifier. 6 Digits
+	BEGIN_EST	I'm assuming this is date? check. Format: yyyy-mm-dd
+	SEASON - Cat: SPRING, FALL
+	ST - No. Stratum? 11-36
+	STAT - No. Station 1-110
+	SETDEPTH - No. Depth. Meters range(4, 89)
+	BOTTEMP - No. deg C range (1.3-21.6)
+	NUM - No. Catch Number (0, 1, 2, 3, 5, 9, 11, 14)
+	WT - No. Weight. kg (0-14.1)

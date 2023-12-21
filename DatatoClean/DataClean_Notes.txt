@@ -1,0 +1,41 @@
+Current Columnns:
+	DATASOURCE
+	LON - format: Decimal Degrees (DD)
+	LAT - format: Decimal Degrees (DD)
+	DATE - format: yyyy.mm.dd
+	SEASON - format:cats(WINTER, SPRING, SUMMER, FALL)
+	SURVEY_ID - Unique to each dataset. Denotes cruise ID number provided by datasource
+	DEPTH - meters
+	TEMP_BOTTOM - Deg C
+	TEMP_SURFACE - Deg C
+	TEMP_AIR - Deg C
+	SALINITY_BOTTOM - Salinity in ppt
+	SALINITY_SURFACE - Salinity in ppt
+	LENGTH - Length of fish in cm
+	WEIGHT - Weight of sampled lumpfish. Kg (for now)
+	WEIGHT_AVG - Weight of sampled lumpfish if you had to take average from tow. Kg (NA if WEIGHT is specified)
+	WEIGHT_TOW - Weight of whole tow if aggregated. Kg (NA if WEIGHT is specified)
+	NO_TOW - Number of lumpfish in tow if available. Used to calculate WEIGHT_AVG
+	WEIGHT_BAYES - Weight when calculated from length using Bayesian Length Weight from Bayesian length-weight Fishbase: https://www.fishbase.org.au/v4/summary/62 "a=0.02630 (0.01101 - 0.06285), b=2.99 (2.77 - 3.21), in cm total length, based on LWR estimates for this (Sub)family-body shape" Note: Only use this weight for NOAA Observer data
+	AGE - String YOY - Young of year (Length < 7 cm)
+			JUVENILE (7 < Length < 17 cm)
+			ADULT (Length > 17 cm)
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

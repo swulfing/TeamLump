@@ -1,0 +1,33 @@
+? Indicates need to look in metadata somehwere
+
+2 Datasets:
+	NHFG_Catch
+	NHFG_Lengths
+	
+Connecting Columns:
+	Everything except Numbercaught and Length
+	
+Column Names:
+	NHFG_Catch - 47 Datapoints. Positive Catch
+		SampleID - String
+		Species - String. Ignore
+		NumberCaught - No.
+		Date - Format: m/dd/yyyy
+		StationName - String
+		Latitude - Format: eg 43o 03 28.0"N (mins/secs)
+		Longitude - Format: eg 070o 42 51.7"W (mins/secs)
+		Temp - No. Degrees C. Surface temp
+		Salinity - No. ppt. I'm assuming this is bottom salinity?
+		Substrate - String
+	
+	NHFG_Lengths - 90 Datapoints. Positive Catch
+		CommonName - Ignore
+		SampleID - No
+		Length - No. Units?
+		Date - Format: m/dd/yyyy
+		StationName - String
+		Latitude - Format: eg 43o 03 28.0"N (mins/secs)
+		Longitude - Format: eg 070o 42 51.7"W (mins/secs)
+		Temp - No. Units?
+		Salinity - No. Units?
+		Substrate - String

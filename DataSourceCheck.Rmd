@@ -1,0 +1,186 @@
+---
+title: "DataSourceCheck"
+author: "Sophie Wulfing"
+date: "2023-03-15"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+header-includes: \usepackage{lscape} \newcommand{\blandscape}{\begin{landscape}} \newcommand{\elandscape}{\end{landscape}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "C:/Users/sophi/Documents/GitHub/TeamLump")
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+library(tidyr)
+library(dplyr)
+library(magrittr)
+library(sp)
+#library(data.table)
+#library(hms)
+library(lubridate)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+
+setwd("C:/Users/sophi/Documents/GitHub/TeamLump")
+datasets <- c("MA_DMF_clean", "ME_DMR_clean", "NH_FG_clean", "NOAA_Observer_clean", "NEFSC_clean", "datasets")
+
+lumpData <- data.frame(read.csv("DatatoClean/Lumpfish_Data_clean.csv"))
+
+lumpData$YEAR <- year(lumpData$DATE)
+
+split.print <- function(x, cols = 2, sects = 1, spaces = 1, caption = "", label = ""){
+  if (cols < 1) stop("cols must be GT 1!")
+  if (sects < 1) stop("sects must be GT 1!")
+  rims <- nrow(x) %% sects
+  nris <- (rep(nrow(x) %/% sects, sects) + c(rep(1, rims), rep(0, sects-rims))) %>%
+    cumsum() %>% 
+    c(0, .)
+  
+  for(s in 1:sects){
+    xs <- x[(nris[s]+1):nris[s+1], ]
+    rimc <- nrow(xs) %% cols
+    nric <- (rep(nrow(xs) %/% cols, cols) + c(rep(1, rimc), rep(0, cols-rimc))) %>%
+      cumsum() %>% 
+      c(0, .)
+    lst <- NULL
+    spc <- NULL
+    for(sp in 1:spaces) spc <- c(spc, list(matrix(numeric(), nrow=0, ncol=1)))
+    for(c in 1:cols){
+      lst <- c(lst, list(xs[(nric[c]+1):nric[c+1], ]))
+      if (cols > 1 & c < cols) lst <- c(lst, spc)
+    }
+    kable(lst, 
+          caption = ifelse(sects == 1, caption, paste0(caption, " (", s, "/", sects, ")")),
+          label = "tables", format = "latex", booktabs = TRUE) %>% 
+      kable_styling(latex_options = "hold_position") %>% 
+      print()
+  }
+}
+
+```
+
+```{r yearly, fig.cap = 'Number of datapoints per year'}
+yearBreakdown <- lumpData %>%
+  group_by(YEAR) %>%
+  summarize(count = n())
+
+hist(lumpData$YEAR, xlab = "Year", ylab = "# Datapoints")
+
+```
+
+\newpage
+
+```{r yearlyTable, results = 'asis'}
+
+#knitr::kable(yearBreakdown, format = "latex")
+
+kable(yearBreakdown, "latex", longtable = T, booktabs = T) %>%
+  kable_styling(latex_options = c("repeat_header"), font_size = 7) %>% 
+  kable_styling(latex_options="scale_down")
+
+```
+
+\newpage
+
+```{r yearlyStacked, fig.cap = 'Number of datapoints per year separated by Data Source'}
+
+yearlyStacked <- lumpData %>%
+  group_by(YEAR, DATA_SOURCE) %>%
+  summarize(count = n())
+
+ggplot(yearlyStacked, aes(fill=DATA_SOURCE, y=count, x=YEAR)) + 
+  geom_bar(position='stack', stat='identity')
+```
+
+```{r yearlyStackedTable, results = 'asis'}
+
+#knitr::kable(yearlyStacked, format = "latex")
+
+# rows <- seq_len(nrow(yearlyStacked) %/% 3)
+# kable(list(yearlyStacked[rows,],
+#            #matrix(numeric(), nrow = 0, ncol = 1),
+#            yearlyStacked[(rows + 53),],
+#            #matrix(numeric(), nrow = 0, ncol = 1),
+#            yearlyStacked[-rows,]),
+#       format = 'latex', booktabs = TRUE)
+
+# kable(yearlyStacked, "latex", longtable = T, booktabs = T) %>%
+#   kable_styling(latex_options = c("repeat_header"), font_size = 7)
+
+yearlyStacked %>% split.print(cols = 2, sects = 2, caption = "Year and Source Breakdown")
+
+
+```
+ 
+\newpage 
+ 
+```{r wherecollected}
+wherebreakdown <- lumpData %>%
+  drop_na(LAT) %>%
+  group_by(YEAR) %>%
+  summarize(MinLat = min(LAT),
+            MaxLat = max(LAT),
+            MinLong = min(LON),
+            MaxLong = max(LON))
+
+#wherebreakdown %>% split.print(cols = 5, sects = 1, caption = "Yearly Range of Collection")
+
+kable(wherebreakdown, "latex", longtable = T, booktabs = T) %>%
+  kable_styling(latex_options = c("repeat_header"), font_size = 7)
+
+```
+
+\newpage
+\blandscape
+
+```{r latcollected, fig.align="center", fig.height=8, fig.width=11, fig.cap = 'Range of latitudes Lumpfish were collected at per year'}
+p <- ggplot(lumpData, aes(x = factor(YEAR), y = LAT)) +
+   geom_boxplot() +
+  scale_x_discrete(breaks = seq(1960, 2030, by = 10)) + 
+  xlab("Year") +
+  ylab("Latitude")
+
+p
+
+#knitr::opts_chunk$set(out.width='1\\linewidth', fig.width=9, fig.height=4)
+```
+
+\elandscape
+
+\newpage
+
+```{r geartypes, results = 'asis'}
+gearlist <- read.csv("GearTypes.csv")
+kable(gearlist, "latex", longtable = T, booktabs = T) %>% 
+  kable_styling(latex_options="scale_down")%>%
+  column_spec(2, width = "4.5cm")
+
+
+```
+
+```{r NEFSCGear, fig.cap = "Gear Types used by NEFSC Dataset"}
+
+NEFSC_test <- data.frame(read.csv("C:/Users/sophi/Desktop/NEFSC_Data/NEFSC_GearTest.csv"))
+
+#NEFSC_test$SVGEAR <- as.factor(NEFSC_test$SVGEAR)
+
+NEFSC_Gear <- NEFSC_test %>%
+  group_by(SVGEAR) %>%
+  summarize(count = n())%>%
+  drop_na(SVGEAR) %>%
+  mutate(SVGEAR1 = case_when(
+    SVGEAR == 10 ~ "Rockhopper Sweep",
+    SVGEAR == 11 ~ "Yankee Trawl",
+    SVGEAR == 17 ~ "WinterSurvey Flatnet Trawl",
+    SVGEAR == 41 ~"Modified Yankee Trawl"
+  ))
+
+ggplot(data=NEFSC_Gear, aes(x=SVGEAR1, y=count)) +
+  geom_bar(stat="identity") +
+  xlab("Gear Type") +
+  ylab("# Datapoints")
+
+```

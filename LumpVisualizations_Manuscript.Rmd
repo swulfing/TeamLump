@@ -1,0 +1,406 @@
+---
+title: "Lump Manuscript Figures"
+author: "Sophie Wulfing"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE, cache=FALSE, echo = FALSE, warning=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE, message = FALSE, tidy.opts=list(width.cutoff=60),tidy=TRUE, cache = TRUE, dev = c('pdf','png'), dpi=300)
+
+library(tidyverse)
+library(sf)
+#library(mapview)
+library(lubridate)
+library(gganimate)
+library(gifski)
+library(maps)
+library(knitr)
+library(ggpubr)
+library(magick)
+library(ggplot2)
+library(dplyr)
+library(hexbin)
+library(RColorBrewer)
+
+theme_qmel <- function(){
+
+  theme_classic() + theme(panel.border = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.text=element_text(size=8),
+
+        axis.title=element_text(size=14))
+
+}
+
+#setwd("C:/Users/sophi/Documents/GitHub/TeamLump")
+Lumpfish_Data_clean <- read.csv("DatatoClean/Lumpfish_Data_clean.csv")
+Lumpfish_Data_clean$YEAR <- year(Lumpfish_Data_clean$DATE)
+Lumpfish_Data_clean$DATA_SOURCE[ Lumpfish_Data_clean$DATA_SOURCE == "NEFSC" ] <- "NEFSC_BT"
+Lumpfish_Data_clean$DATA_SOURCE[ Lumpfish_Data_clean$DATA_SOURCE == "NOAA_Observer" ] <- "NEFSC_Observer"
+
+Lumpfish_Data_occurrences <- read.csv("DatatoClean/Lumpfish_Data_occurrences.csv")
+Lumpfish_Data_occurrences$YEAR <- year(Lumpfish_Data_occurrences$DATE)
+Lumpfish_Data_occurrences$DATA_SOURCE[ Lumpfish_Data_occurrences$DATA_SOURCE == "NEFSC" ] <- "NEFSC_BT"
+Lumpfish_Data_occurrences$DATA_SOURCE[ Lumpfish_Data_occurrences$DATA_SOURCE == "NOAA_Observer" ] <- "NEFSC_Observer"
+
+Lumpfish_Data_map <- Lumpfish_Data_clean %>%
+  drop_na(c("LAT", "LON", "DATE", "YEAR")) %>%
+  mutate(across(SEASON, factor, levels = c("WINTER", "SPRING", "SUMMER", "FALL")))
+
+which_state <- c("maine", "new hampshire", "vermont", "massachusetts", "rhode island", "connecticut",
+                 "new york", "new jersey", "pennsylvania", "virginia", "maryland", "washington dc", "delaware")
+county_info <- map_data("state", region=which_state)
+
+base_map <- ggplot(data = county_info, mapping = aes(x = long, y = lat, group = group)) +
+  geom_polygon(color = "black", fill = "white") +
+  coord_quickmap() +
+  theme_void() 
+
+min_long <- min(Lumpfish_Data_map$LON)
+max_long <- -66 #max(Lumpfish_Data_map$LON)
+min_lat <- 41.5 #min(Lumpfish_Data_map$LAT)
+max_lat <- max(Lumpfish_Data_map$LAT)
+
+zoom_map <- base_map +
+   coord_quickmap(xlim = c(min_long, max_long),  ylim = c(min_lat, max_lat))
+
+
+# testing <- Lumpfish_Data_clean %>%
+#   filter(DATA_SOURCE == "NEFSC") %>%
+#   #drop_na(c("LAT", "LON", "DATE", "YEAR")) %>%
+#   filter(is.na(YEAR))
+# 
+# 
+# View(testing)
+# 
+# 
+# min(testing$YEAR)
+# temptest <- Lumpfish_Data_clean %>%
+#   group_by(DATA_SOURCE) %>%
+#   summarize(mean(TEMP_BOTTOM, na.rm = TRUE))
+# 
+# View(temptest)
+
+```
+
+```{r allpointstable, echo = FALSE, results = 'asis', warning=FALSE}
+
+library(dplyr)
+
+data_year_table <- data.frame(matrix(ncol = 3, nrow = 0))
+colnames(data_year_table) <- c("Data Code", "Years Spanned", "Number of datapoints")
+
+sources <- unique(Lumpfish_Data_clean$DATA_SOURCE)
+
+for(i in 1:length(sources)){
+  new_data <- Lumpfish_Data_clean %>%
+    filter(DATA_SOURCE == sources[i])
+  
+  data_year_table[i,] <- c(sources[i], paste0(min(new_data$YEAR), "-", max(new_data$YEAR)), nrow(new_data))
+}
+
+data_year_table[(length(sources) + 1),] <- c('TOTAL', paste0(min(Lumpfish_Data_clean$YEAR), "-", max(Lumpfish_Data_clean$YEAR)), nrow(Lumpfish_Data_clean))
+
+knitr::kable(data_year_table, caption = "Data points and year spanned per source of all data points")
+
+```
+
+```{r occurencespointstable, echo = FALSE, results = 'asis', warning=FALSE}
+
+library(dplyr)
+
+occurences_year_table <- data.frame(matrix(ncol = 3, nrow = 0))
+colnames(occurences_year_table) <- c("Data Code", "Years Spanned", "Number of datapoints")
+
+sources <- unique(Lumpfish_Data_occurrences$DATA_SOURCE)
+
+for(i in 1:length(sources)){
+  new_data <- Lumpfish_Data_occurrences %>%
+    filter(DATA_SOURCE == sources[i])
+  
+  occurences_year_table[i,] <- c(sources[i], paste0(min(new_data$YEAR), "-", max(new_data$YEAR)), nrow(new_data))
+}
+
+occurences_year_table[(length(sources) + 1),] <- c('TOTAL', paste0(min(Lumpfish_Data_occurrences$YEAR), "-", max(Lumpfish_Data_occurrences$YEAR)), nrow(Lumpfish_Data_occurrences))
+
+knitr::kable(occurences_year_table, caption = "Data points and year spanned per source of occurrences")
+
+```
+
+```{r AllDataPerSource, echo=FALSE, fig.cap='Datapoints per source', warning=FALSE}
+library(dplyr)
+
+brewerPalette <- c("#FF7F00", "#33A02C", "#E31A1C", "#1F78B4", "#6A3D9A")
+
+zoom_map +
+  geom_point(data = Lumpfish_Data_map, aes(x = LON, y = LAT, group=DATA_SOURCE, colour = DATA_SOURCE), size = .75)+
+  guides(colour=guide_legend(title="Data Source")) +
+  scale_colour_manual(values = brewerPalette, labels=c('MA DMF', 'ME DMR', 'NEFSC BT', 'NEFSC OBSERVER', 'NH FG')) +
+  xlab("Longitude") +
+  ylab("Latitude") +
+  theme_qmel()
+
+
+
+```
+
+```{r FishPerSEASON, echo=FALSE, fig.cap='Datapoints per season', warning=FALSE}
+
+brewerPalette <- c("#FF7F00", "#33A02C", "#E31A1C", "#1F78B4", "#6A3D9A")
+
+library(dplyr)
+
+season_labs <- c("Winter", "Spring", "Summer", "Fall")
+names(season_labs) <- c("WINTER", "SPRING", "SUMMER", "FALL")
+
+zoom_map +
+  geom_point(data = Lumpfish_Data_map, aes(x = LON, y = LAT, group=DATA_SOURCE, colour = DATA_SOURCE), size = .75) +
+  facet_wrap(~ SEASON, ncol = 2, labeller = labeller(SEASON = season_labs)) +
+  guides(colour=guide_legend(title="Data Source")) +
+  scale_colour_manual(values = brewerPalette, labels=c('MA DMF', 'ME DMR', 'NEFSC BT', 'NEFSC OBSERVER', 'NH FG')) +
+  xlab("Longitude") +
+  ylab("Latitude") +
+  theme_qmel()
+  
+
+
+
+```
+
+```{r DistMap, echo=FALSE, fig.cap='Distribution of Lumpfish from all datasets', warning=FALSE}
+
+dist_data <- Lumpfish_Data_map 
+  #filter(LAT >= 41.5) %>%
+  #filter(DATA_SOURCE == "NOAA_Observer")
+
+ggplot(dist_data, aes(LON, LAT)) +
+  theme_qmel() +
+  geom_hex(bins = 100) +
+  geom_polygon(data = county_info, mapping = aes(x = long, y = lat, group = group), color = "black", fill = "white") +
+  #geom_path(data = county_info, mapping = aes(x = long, y = lat, group = group)) +
+  coord_quickmap(xlim = c(min_long, max_long),  ylim = c(min_lat, max_lat)) +
+  xlab("Longitude") +
+  ylab("Latitude") +
+  scale_fill_continuous(name = "Lumpfish Count")
+
+```
+
+```{r tempDist, echo = FALSE, fig.cap = 'Bottom temperature of catch'}
+
+temp_graph <- Lumpfish_Data_map %>%
+  filter(!is.na(TEMP_BOTTOM))
+
+tempMap_zoom <- zoom_map +
+  geom_point(data = temp_graph, aes(x = LON, y = LAT, group=TEMP_BOTTOM, colour = TEMP_BOTTOM)) +
+  scale_colour_continuous(name = "Bottom Temperature (c)") +
+  xlab("Longitude") +
+  ylab("Latitude") +
+  theme_qmel()
+tempMap_zoom
+
+```
+
+
+```{r depthDist, echo = FALSE, fig.cap = 'Depth of each lumpfish occurance'}
+
+depth_graph <- Lumpfish_Data_map %>%
+  filter(!is.na(DEPTH))
+
+depthMap_zoom <- zoom_map +
+  geom_point(data = depth_graph, aes(x = LON, y = LAT, group=DEPTH, colour = DEPTH)) +
+  scale_colour_continuous(name = "Depth (m)") +
+  xlab("Longitude") +
+  ylab("Latitude") +
+  theme_qmel()
+depthMap_zoom
+
+```
+
+```{r tempDistNEFSC, echo = FALSE, fig.cap = 'Bottom temperature of catch in NEFSC BT dataset'}
+
+NEFSCtemp_graph <- Lumpfish_Data_map %>%
+  filter(!is.na(TEMP_BOTTOM)) %>%
+  filter(DATA_SOURCE == 'NEFSC_BT')
+
+NEFSCtempMap_zoom <- zoom_map +
+  geom_point(data = NEFSCtemp_graph, aes(x = LON, y = LAT, group=TEMP_BOTTOM, colour = TEMP_BOTTOM)) +
+  scale_colour_continuous(name = "Bottom Temperature (c)") +
+  xlab("Longitude") +
+  ylab("Latitude") +
+  theme_qmel()
+
+NEFSCtempMap_zoom
+
+```
+
+```{r ObserverGearType, echo=FALSE, warning=FALSE}
+#getwd()
+observerGear <- as.data.frame(read.csv('DatatoClean/NOAAObserver_gearCount.csv'))
+colnames(observerGear) <- c('Gear Type', 'Count')
+
+knitr::kable(observerGear, caption = "Number of fish caught per geartype in NEFSC Observer Data")
+```
+
+# Age and Bayesian Weights
+
+Note: Datapoints without lengths were excluded from the following as there was no way to calculate Bayes Weights or Ages
+
+```{r BayesweightBoxplot, echo = FALSE, fig.cap = "Range of calculated Bayesian weights per datasource. MA DMF did not report lengths so were not included in this graph"}
+
+bayes_graph <- Lumpfish_Data_map %>%
+  filter(!is.na(WEIGHT_BAYESIAN))
+
+ggplot(bayes_graph, aes(x = DATA_SOURCE, y = WEIGHT_BAYESIAN)) +
+  geom_boxplot() +
+  scale_x_discrete(labels = c("ME DMR", "NEFSC BT", "NEFSC OBSERVER", "NH FG")) +
+  xlab("Data Source") +
+  ylab ("Bayesian Weight (kg)") +
+  theme_qmel()
+  
+
+
+```
+
+```{r agedistBarplot, echo = FALSE, fig.cap = "Age of fish caught by each Data Source.  MA DMF did not report lengths so were not included in this graph" }
+
+
+yearlyStacked <- Lumpfish_Data_map %>%
+  group_by(DATA_SOURCE, AGE) %>%
+  filter(!is.na(AGE)) %>%
+  summarize(count = n())
+
+ggplot(yearlyStacked, aes(fill=AGE, y=count, x=DATA_SOURCE)) + 
+  geom_bar(position='stack', stat='identity') +
+  scale_x_discrete(labels = c("ME DMR", "NEFSC BT", "NEFSC OBSERVER", "NH FG")) +
+  xlab("Data Source") +
+  ylab ("Count") +
+  theme_qmel()
+  
+
+#Then do age over years
+#Age over season
+
+```
+
+```{r ageperyearBarplot, echo = FALSE, fig.cap = "Number of datapoints per year separated by age" }
+
+
+yearlyageStacked <- Lumpfish_Data_map %>%
+  group_by(YEAR, AGE) %>%
+  filter(!is.na(AGE)) %>%
+  summarize(count = n())
+
+ggplot(yearlyageStacked, aes(fill=AGE, y=count, x=YEAR)) + 
+  geom_bar(position='stack', stat='identity') +
+  xlab("Year") +
+  ylab ("Count") +
+  theme_qmel()
+
+```
+
+```{r ageperseasonBarplot, echo = FALSE, fig.cap = "Number of datapoints per season separated by age" }
+
+
+seasonageStacked <- Lumpfish_Data_map %>%
+  group_by(SEASON, AGE) %>%
+  filter(!is.na(AGE)) %>%
+  summarize(count = n())
+
+ggplot(seasonageStacked, aes(fill=AGE, y=count, x=SEASON)) + 
+  geom_bar(position='stack', stat='identity') +
+  scale_x_discrete(labels = c("Winter", "Spring", "Summer", "Fall")) +
+  xlab("Season") +
+  ylab ("Count") +
+  theme_qmel()
+
+
+```
+
+```{r AgeDistMapYOY, echo=FALSE, fig.cap='Distribution of YOY Lumpfish', warning=FALSE}
+
+YOYdist_data <- Lumpfish_Data_map %>%
+  drop_na(AGE) %>%
+  filter(AGE == 'YOY')
+  #filter(DATA_SOURCE == "NOAA_Observer")
+
+p_YOY <- ggplot(YOYdist_data, aes(LON, LAT)) +
+          geom_hex(bins = 50) +
+          geom_polygon(data = county_info, mapping = aes(x = long, y = lat, group = group), color = "black", fill = "white") +
+          #geom_path(data = county_info, mapping = aes(x = long, y = lat, group = group)) +
+          coord_quickmap(xlim = c(min_long, max_long),  ylim = c(min_lat, max_lat)) +
+          xlab("Longitude") +
+          ylab("Latitude") +
+          scale_fill_continuous(name = "YOY Lumpfish Count") +
+          theme_qmel()
+
+p_YOY
+
+```
+
+```{r AgeDistMapJUVENILE, echo=FALSE, fig.cap='Distribution of Juvenile Lumpfish', warning=FALSE}
+
+
+JUVENILEdist_data <- Lumpfish_Data_map %>%
+  drop_na(AGE) %>%
+  filter(AGE == 'JUVENILE')
+  #filter(DATA_SOURCE == "NOAA_Observer")
+
+p_JUVENILE <- ggplot(JUVENILEdist_data, aes(LON, LAT)) +
+          geom_hex(bins = 50) +
+          geom_polygon(data = county_info, mapping = aes(x = long, y = lat, group = group), color = "black", fill = "white") +
+          #geom_path(data = county_info, mapping = aes(x = long, y = lat, group = group)) +
+          coord_quickmap(xlim = c(min_long, max_long),  ylim = c(min_lat, max_lat)) +
+          xlab("Longitude") +
+          ylab("Latitude") +
+          scale_fill_continuous(name = "JUVENILE Lumpfish Count") +
+          theme_qmel()
+
+p_JUVENILE
+
+```
+
+```{r AgeDistMapADULT, echo=FALSE, fig.cap='Distribution of Adult Lumpfish', warning=FALSE}
+
+
+
+ADULTdist_data <- Lumpfish_Data_map %>%
+  drop_na(AGE) %>%
+  filter(AGE == 'ADULT')
+  #filter(DATA_SOURCE == "NOAA_Observer")
+
+p_ADULT <- ggplot(ADULTdist_data, aes(LON, LAT)) +
+          geom_hex(bins = 50) +
+          geom_polygon(data = county_info, mapping = aes(x = long, y = lat, group = group), color = "black", fill = "white") +
+          #geom_path(data = county_info, mapping = aes(x = long, y = lat, group = group)) +
+          coord_quickmap(xlim = c(min_long, max_long),  ylim = c(min_lat, max_lat)) +
+          xlab("Longitude") +
+          ylab("Latitude") +
+          scale_fill_continuous(name = "ADULT Lumpfish Count") +
+          theme_qmel()
+
+
+
+p_ADULT
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
