@@ -9,7 +9,7 @@ output:
 
 ```{r setup, include=FALSE, cache=FALSE, echo = FALSE, warning=FALSE}
 
-knitr::opts_chunk$set(echo = FALSE,warning = FALSE, message = FALSE, tidy.opts=list(width.cutoff=60),tidy=TRUE, cache = TRUE, dev = c('pdf','png'), dpi=300)
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE, message = FALSE, tidy.opts=list(width.cutoff=60),tidy=TRUE, cache = FALSE, dev = c('pdf','png'), dpi=300)
 
 library(tidyverse)
 library(sf)
@@ -36,14 +36,19 @@ theme_qmel <- function(){
 
 #setwd("C:/Users/sophi/Documents/GitHub/TeamLump")
 Lumpfish_Data_clean <- read.csv("DatatoClean/Lumpfish_Data_clean.csv")
-Lumpfish_Data_clean$YEAR <- year(Lumpfish_Data_clean$DATE)
-Lumpfish_Data_clean$DATA_SOURCE[ Lumpfish_Data_clean$DATA_SOURCE == "NEFSC" ] <- "NEFSC_BT"
-Lumpfish_Data_clean$DATA_SOURCE[ Lumpfish_Data_clean$DATA_SOURCE == "NOAA_Observer" ] <- "NEFSC_Observer"
+# Lumpfish_Data_clean$YEAR <- year(Lumpfish_Data_clean$DATE)
+# Lumpfish_Data_clean$DATA_SOURCE[ Lumpfish_Data_clean$DATA_SOURCE == "NEFSC" ] <- "NEFSC_BT"
+# Lumpfish_Data_clean$DATA_SOURCE[ Lumpfish_Data_clean$DATA_SOURCE == "NOAA_Observer" ] <- "NEFSC_Observer"
+Lumpfish_Data_clean <- Lumpfish_Data_clean %>%
+  filter(YEAR <= 2021) # Just using 2021 Data
 
-Lumpfish_Data_occurrences <- read.csv("DatatoClean/Lumpfish_Data_occurrences.csv")
-Lumpfish_Data_occurrences$YEAR <- year(Lumpfish_Data_occurrences$DATE)
-Lumpfish_Data_occurrences$DATA_SOURCE[ Lumpfish_Data_occurrences$DATA_SOURCE == "NEFSC" ] <- "NEFSC_BT"
-Lumpfish_Data_occurrences$DATA_SOURCE[ Lumpfish_Data_occurrences$DATA_SOURCE == "NOAA_Observer" ] <- "NEFSC_Observer"
+# Lumpfish_Data_occurrences <- read.csv("DatatoClean/Lumpfish_Data_occurrences.csv")
+# Lumpfish_Data_occurrences$YEAR <- year(Lumpfish_Data_occurrences$DATE)
+# Lumpfish_Data_occurrences$DATA_SOURCE[ Lumpfish_Data_occurrences$DATA_SOURCE == "NEFSC" ] <- "NEFSC_BT"
+# Lumpfish_Data_occurrences$DATA_SOURCE[ Lumpfish_Data_occurrences$DATA_SOURCE == "NOAA_Observer" ] <- "NEFSC_Observer"
+
+Lumpfish_Data_occurrences <- Lumpfish_Data_occurrences %>%
+  filter(YEAR <= 2021)
 
 Lumpfish_Data_map <- Lumpfish_Data_clean %>%
   drop_na(c("LAT", "LON", "DATE", "YEAR")) %>%
@@ -237,7 +242,7 @@ NEFSCtempMap_zoom
 
 ```{r ObserverGearType, echo=FALSE, warning=FALSE}
 #getwd()
-observerGear <- as.data.frame(read.csv('DatatoClean/NOAAObserver_gearCount.csv'))
+observerGear <- as.data.frame(read.csv('DatatoClean/NOAAObserver_gearCount_2021.csv'))
 colnames(observerGear) <- c('Gear Type', 'Count')
 
 knitr::kable(observerGear, caption = "Number of fish caught per geartype in NEFSC Observer Data")

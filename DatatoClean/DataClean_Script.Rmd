@@ -19,7 +19,7 @@ library(sp)
 library(lubridate)
 
 #setwd("C:/Users/sophi/Documents/GitHub/TeamLump")
-datasets <- c("MA_DMF_clean", "ME_DMR_clean", "NH_FG_clean", "NOAA_Observer_clean", "NEFSC_clean", "datasets")
+datasets <- c("MA_DMF_clean", "ME_DMR_clean", "NH_FG_clean", "NEFSC_Observer_clean", "NEFSC_BT_clean", "datasets")
 
 ```
 
@@ -247,10 +247,10 @@ rm(list=setdiff(ls(), datasets))
 
 ```
 
-```{r NOAA_Observer}
+```{r NEFSC_Observer}
 
-catch_data <- data.frame(read.csv("C:/Users/sophi/Desktop/NOAA_Observer_Data/NOAA_Observer_CatchData.csv"))
-length_data <- data.frame(read.csv("C:/Users/sophi/Desktop/NOAA_Observer_Data/NOAA_Observer_LengthData.csv"))
+catch_data <- data.frame(read.csv("C:/Users/Sophi/Desktop/NEFSC_Observer_Data/NEFSC_Observer_CatchData.csv"))
+length_data <- data.frame(read.csv("C:/Users/Sophi/Desktop/NEFSC_Observer_Data/NEFSC_Observer_LengthData.csv"))
 
 #removing extra rows and columns with empty data from length dataset
 #replicating rows based on number caught
@@ -268,7 +268,7 @@ catch_clean <- catch_data %>%
 catch_combine <- left_join(catch_clean, length_clean, by = c("LINK3", "YEAR", "MONTH"))
 
 #Conversions
-NOAA_Observer_Combine <- catch_combine %>%
+NEFSC_Observer_Combine <- catch_combine %>%
   rowwise() %>%
   mutate(LAT = mean(c(GIS_LATHBEG, GIS_LATHEND), na.rm = TRUE)) %>% #Take average
   mutate(LON = mean(c(GIS_LONHBEG, GIS_LONHEND), na.rm = TRUE)) %>% #Take average
@@ -279,24 +279,24 @@ NOAA_Observer_Combine <- catch_combine %>%
   mutate(WEIGHT = WT_IND * 0.453592) %>%
   drop_na(c("LAT", "LON", "DATEHBEG"))
 
-NOAA_Observer_Combine$DATEHBEG <- as.POSIXct(NOAA_Observer_Combine$DATEHBEG, format = "%m-%d-%Y %T")
+NEFSC_Observer_Combine$DATEHBEG <- as.POSIXct(NEFSC_Observer_Combine$DATEHBEG, format = "%m-%d-%Y %T")
 
-NOAA_Observer_clean <- NOAA_Observer_Combine %>%
+NEFSC_Observer_clean <- NEFSC_Observer_Combine %>%
   select(DATEHBEG, LAT, LON, DEPTH, TEMP_SURFACE, WEIGHT_TOW, LENANML, WEIGHT_AVG, WEIGHT, NUMLEN, GEARNM) %>%
   rename(DATE = DATEHBEG,
          LENGTH = LENANML,
          NO_TOW = NUMLEN) %>% 
-  mutate(DATA_SOURCE = "NOAA_Observer", .before = DATE) %>%
+  mutate(DATA_SOURCE = "NEFSC_Observer", .before = DATE) %>%
   mutate(NOTES = "LAT and LON taken as average of start and end of tow measurements")
   
 rm(list=setdiff(ls(), datasets))
 
 
 # #test to see if NAs have matching tow codes
-# test <- NOAA_Observer_clean %>%
+# test <- NEFSC_Observer_clean %>%
 #   filter_at(vars(LAT, LON, DATE), any_vars(is.na(.)))
 # 
-# Comparison <- NOAA_Observer_clean %>%
+# Comparison <- NEFSC_Observer_clean %>%
 #   filter(LINK3 %in% c(test$LINK3)) %>%
 #   count(unique(LINK3))
 # #They do not. Tows with missing info do not match a tow with existing info
@@ -304,20 +304,20 @@ rm(list=setdiff(ls(), datasets))
 
 ```
 
-```{r NEFSC}
-NEFSC_sets <- c("22560", "22561", "22562", "22563")
+```{r NEFSC_BT}
+NEFSC_BT_sets <- c("22560", "22561", "22562", "22563")
 seasons <- c("FALL", "SPRING", "SUMMER", "WINTER")
-fileLocation <- "C:/Users/sophi/Desktop/NEFSC_Data/"
+fileLocation <- "C:/Users/sophi/Desktop/NEFSC_BT_Data/"
 
-NEFSC_seasonlist <- list()
+NEFSC_BT_seasonlist <- list()
 
-# NEFSC Data separated by season collected. This for loop just goes through data from each season and applies same cleaning protocol
-for(i in 1:length(NEFSC_sets)){
+# NEFSC_BT Data separated by season collected. This for loop just goes through data from each season and applies same cleaning protocol
+for(i in 1:length(NEFSC_BT_sets)){
 # Note. Not using cruise dataset
-environ_data <- data.frame(read.csv(paste0(fileLocation,"NEFSC/", NEFSC_sets[i], "_FSCSTables/", NEFSC_sets[i], "_UNION_FSCS_SVSTA.csv")))
-catch_data <- data.frame(read.csv(paste0(fileLocation,"NEFSC/", NEFSC_sets[i], "_FSCSTables/", NEFSC_sets[i], "_UNION_FSCS_SVCAT.csv")))
-bio_data <- data.frame(read.csv(paste0(fileLocation,"NEFSC/", NEFSC_sets[i], "_FSCSTables/", NEFSC_sets[i], "_UNION_FSCS_SVBIO.csv")))
-len_data <- data.frame(read.csv(paste0(fileLocation,"NEFSC/", NEFSC_sets[i], "_FSCSTables/", NEFSC_sets[i], "_UNION_FSCS_SVLEN.csv")))
+environ_data <- data.frame(read.csv(paste0(fileLocation,"NEFSC_BT/", NEFSC_BT_sets[i], "_FSCSTables/", NEFSC_BT_sets[i], "_UNION_FSCS_SVSTA.csv")))
+catch_data <- data.frame(read.csv(paste0(fileLocation,"NEFSC_BT/", NEFSC_BT_sets[i], "_FSCSTables/", NEFSC_BT_sets[i], "_UNION_FSCS_SVCAT.csv")))
+bio_data <- data.frame(read.csv(paste0(fileLocation,"NEFSC_BT/", NEFSC_BT_sets[i], "_FSCSTables/", NEFSC_BT_sets[i], "_UNION_FSCS_SVBIO.csv")))
+len_data <- data.frame(read.csv(paste0(fileLocation,"NEFSC_BT/", NEFSC_BT_sets[i], "_FSCSTables/", NEFSC_BT_sets[i], "_UNION_FSCS_SVLEN.csv")))
 
 
 #Create Catch ID's for each dataset and then filter out for lumpfish (SVSPP = 168)
@@ -400,24 +400,24 @@ indiv_data <- left_join(length_data_clean, bio_data_clean,
 
 
 
-NEFSC_season <- right_join(environ_data_clean, catch_data_clean,
+NEFSC_BT_season <- right_join(environ_data_clean, catch_data_clean,
                        by = c("SURVEY_ID", "SEASON")) %>%
   full_join(., indiv_data,
             by = "SURVEY_ID") %>%
-  mutate(DATA_SOURCE = "NEFSC")
+  mutate(DATA_SOURCE = "NEFSC_BT")
 
-NEFSC_seasonlist[[i]] <- NEFSC_season
+NEFSC_BT_seasonlist[[i]] <- NEFSC_BT_season
 } ## End for loop, still need to stack all datasets
 
-#write.csv(NEFSC_clean, "C:/Users/sophi/Desktop/NEFSC_Data/NEFSC_GearTest.csv")
+#write.csv(NEFSC_BT_clean, "C:/Users/sophi/Desktop/NEFSC_BT_Data/NEFSC_BT_GearTest.csv")
 
-NEFSC_clean <- Reduce(full_join, NEFSC_seasonlist)
+NEFSC_BT_clean <- Reduce(full_join, NEFSC_BT_seasonlist)
 rm(list=setdiff(ls(), datasets))
 ```
 
 ```{r combine}
 
-Lumpfish_Data_clean <- plyr::rbind.fill(MA_DMF_clean, ME_DMR_clean, NH_FG_clean, NOAA_Observer_clean, NEFSC_clean)
+Lumpfish_Data_clean <- plyr::rbind.fill(MA_DMF_clean, ME_DMR_clean, NH_FG_clean, NEFSC_Observer_clean, NEFSC_BT_clean)
 
 #Fix Date Formats
 Lumpfish_Data_clean$DATE <- format(as.POSIXct(Lumpfish_Data_clean$DATE, format = "%m/%d/%Y %H:%M:%S"),
@@ -437,15 +437,27 @@ Lumpfish_Data_clean <- Lumpfish_Data_clean %>%
   filter((WEIGHT <= 9.5) %>% replace_na(TRUE)) %>%
   mutate(WEIGHT_BAYESIAN = (0.02630 * (LENGTH ^ 2.99)) * 0.001)
 
+Lumpfish_Data_clean$YEAR <- year(Lumpfish_Data_clean$DATE)
+
 #Make csv file that reports the gear types used in NOAA Observer Data
-NOAAObserver_gearCount <- Lumpfish_Data_clean %>%
-  filter(DATA_SOURCE == "NOAA_Observer") %>%
+NOAAObserver_gearCount_ALL <- Lumpfish_Data_clean %>%
+  filter(DATA_SOURCE == "NEFSC_Observer") %>%
   group_by(GEARNM) %>%
   summarize(count = n()) %>%
   arrange(desc(count))
   
 
-write.csv(NOAAObserver_gearCount, "NOAAObserver_gearCount.csv", row.names = FALSE)
+write.csv(NOAAObserver_gearCount_ALL, "NOAAObserver_gearCount_ALL.csv", row.names = FALSE)
+
+NOAAObserver_gearCount_2021 <- Lumpfish_Data_clean %>%
+  filter(DATA_SOURCE == "NEFSC_Observer") %>%
+  filter(YEAR <= 2021) %>%
+  group_by(GEARNM) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+  
+
+write.csv(NOAAObserver_gearCount_2021, "NOAAObserver_gearCount_2021.csv", row.names = FALSE)
 
 # Take out gear from NOAA Observer data and write final csv
 Lumpfish_Data_clean <- Lumpfish_Data_clean %>% select(-c("GEARNM"))
