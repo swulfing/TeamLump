@@ -27,6 +27,9 @@ datasets <- c("MA_DMF_clean", "ME_DMR_clean", "NH_FG_clean", "NEFSC_Observer_cle
 
 MA_DMF <- data.frame(read.csv("MA_DMF/MA_DMF_combined.csv"))
 
+MA_DMF_TOWCOUNT <- MA_DMF %>%
+  group_by(LON, LAT, CRUISE)
+
 #Getting rid of negative catch.change 0 weights to NA's- Reduces from 8087 to 65 datapoints
 MA_DMF_clean <- MA_DMF %>%
   filter(NUM !=0 ) %>%
@@ -66,6 +69,10 @@ Bio_check <- data.frame(read.csv("ME_DMR/Lumpfish_Bio_check.csv"))
 Trawl_Length <- data.frame(read.csv("ME_DMR/MaineDMR_Trawl_Survey_Catch_at_Length_Data_2022.05.21.csv"))
 Trawl_Catch <- data.frame(read.csv("ME_DMR/MaineDMR_Trawl_Survey_Catch_Data_2022.05.21.csv"))
 Trawl_Tow <- data.frame(read.csv("ME_DMR/MaineDMR_Trawl_Survey_Tow_Data_2022.05.21.csv"))
+
+
+ME_DMR_TOWCOUNT <- Trawl_Tow %>%
+  group_by(Survey, Tow_Number, Start_Latitude, Start_Longitude)
 
 #Clean tow dataset - fix dates, average lat/lon data and depths. Make depth in meters
 Trawl_Tow$Date <- as.Date(Trawl_Tow$Start_Date)
@@ -178,6 +185,9 @@ rm(list=setdiff(ls(), datasets))
 NHFG_Catch <- data.frame(read.csv("NH_FG/NHFG_Catch.csv"))
 NHFG_Length <- data.frame(read.csv("NH_FG/NHFG_Lengths.csv"))
 
+NHFG_TOWCOUNT <- NHFG_Catch %>%
+  group_by(SampleID, StationName, Latitude, Longitude)
+
 # # Testing. All sample ID's unique
 # NHFG_test <- NHFG_Catch %>%
 #     group_by(SampleID) %>%
@@ -251,6 +261,9 @@ rm(list=setdiff(ls(), datasets))
 
 catch_data <- data.frame(read.csv("C:/Users/Sophi/Desktop/NEFSC_Observer_Data/NEFSC_Observer_CatchData.csv"))
 length_data <- data.frame(read.csv("C:/Users/Sophi/Desktop/NEFSC_Observer_Data/NEFSC_Observer_LengthData.csv"))
+
+NEFSC_Observer_TOWCOUNT <- catch_data %>%
+  group_by(LINK3)
 
 #removing extra rows and columns with empty data from length dataset
 #replicating rows based on number caught

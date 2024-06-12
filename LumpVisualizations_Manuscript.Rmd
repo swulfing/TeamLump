@@ -47,8 +47,8 @@ Lumpfish_Data_clean <- Lumpfish_Data_clean %>%
 # Lumpfish_Data_occurrences$DATA_SOURCE[ Lumpfish_Data_occurrences$DATA_SOURCE == "NEFSC" ] <- "NEFSC_BT"
 # Lumpfish_Data_occurrences$DATA_SOURCE[ Lumpfish_Data_occurrences$DATA_SOURCE == "NOAA_Observer" ] <- "NEFSC_Observer"
 
-Lumpfish_Data_occurrences <- Lumpfish_Data_occurrences %>%
-  filter(YEAR <= 2021)
+# Lumpfish_Data_occurrences <- Lumpfish_Data_occurrences %>%
+#   filter(YEAR <= 2021)
 
 Lumpfish_Data_map <- Lumpfish_Data_clean %>%
   drop_na(c("LAT", "LON", "DATE", "YEAR")) %>%
@@ -112,7 +112,7 @@ knitr::kable(data_year_table, caption = "Data points and year spanned per source
 
 ```
 
-```{r occurencespointstable, echo = FALSE, results = 'asis', warning=FALSE}
+```{r occurencespointstable, echo = FALSE, results = 'asis', warning=FALSE, eval = FALSE}
 
 library(dplyr)
 
@@ -199,7 +199,8 @@ temp_graph <- Lumpfish_Data_map %>%
 
 tempMap_zoom <- zoom_map +
   geom_point(data = temp_graph, aes(x = LON, y = LAT, group=TEMP_BOTTOM, colour = TEMP_BOTTOM)) +
-  scale_colour_continuous(name = "Bottom Temperature (c)") +
+  scale_colour_continuous(low = "blue", high = "red",  space = "Lab", name = "Bottom Temperature (c)") +
+  # scale_colour_gradient2(low = "blue", mid = "purple", high = "red", midpoint = 10,  space = "Lab", name = "Bottom Temperature (c)") +
   xlab("Longitude") +
   ylab("Latitude") +
   theme_qmel()
@@ -251,6 +252,17 @@ knitr::kable(observerGear, caption = "Number of fish caught per geartype in NEFS
 # Age and Bayesian Weights
 
 Note: Datapoints without lengths were excluded from the following as there was no way to calculate Bayes Weights or Ages
+
+```{r LengthHist}
+
+ggplot(Lumpfish_Data_map, aes(x=LENGTH)) + #, color = AGE)) +
+  geom_histogram() +
+  geom_vline(xintercept = 7, color = "red", linetype="dashed") +
+  geom_vline(xintercept = 17, color = "red", linetype="dashed") +
+  ylab("") +
+  xlab("Length (cm)")
+
+```
 
 ```{r BayesweightBoxplot, echo = FALSE, fig.cap = "Range of calculated Bayesian weights per datasource. MA DMF did not report lengths so were not included in this graph"}
 
