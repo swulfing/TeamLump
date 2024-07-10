@@ -28,7 +28,12 @@ datasets <- c("MA_DMF_clean", "ME_DMR_clean", "NH_FG_clean", "NEFSC_Observer_cle
 MA_DMF <- data.frame(read.csv("MA_DMF/MA_DMF_combined.csv"))
 
 MA_DMF_TOWCOUNT <- MA_DMF %>%
-  group_by(LON, LAT, CRUISE)
+  group_by(LON, LAT, CRUISE ) %>%
+  filter(!is.na(LON) & !is.na(LAT) & !is.na(CRUISE)) %>%
+     filter(n()>1)
+
+
+colSums(MA_DMF_TOWCOUNT != 0)
 
 #Getting rid of negative catch.change 0 weights to NA's- Reduces from 8087 to 65 datapoints
 MA_DMF_clean <- MA_DMF %>%
@@ -73,6 +78,8 @@ Trawl_Tow <- data.frame(read.csv("ME_DMR/MaineDMR_Trawl_Survey_Tow_Data_2022.05.
 
 ME_DMR_TOWCOUNT <- Trawl_Tow %>%
   group_by(Survey, Tow_Number, Start_Latitude, Start_Longitude)
+# %>%
+#      filter(n()>1)
 
 #Clean tow dataset - fix dates, average lat/lon data and depths. Make depth in meters
 Trawl_Tow$Date <- as.Date(Trawl_Tow$Start_Date)
